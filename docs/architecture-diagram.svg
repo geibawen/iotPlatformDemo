@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980">
+  <defs>
+    <style type="text/css"><![CDATA[
+      .title { font: 700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #1f2937; }
+      .subtitle { font: 500 16px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #6b7280; }
+      .section { font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #111827; }
+      .boxTitle { font: 700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .boxText { font: 500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #334155; }
+      .chip { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #1d4ed8; }
+      .arrowText { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #374151; }
+    ]]></style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="980" fill="#f8fafc"/>
+
+  <text x="48" y="58" class="title">IoTPlatformDemo 技术架构图</text>
+  <text x="48" y="88" class="subtitle">Monorepo（frontend / backend / shared）+ iOS 客户端 + CentOS Nginx / PM2 部署</text>
+
+  <rect x="40" y="120" width="1520" height="430" rx="16" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="60" y="155" class="section">运行时业务架构</text>
+
+  <rect x="70" y="190" width="300" height="150" rx="12" fill="#ffffff" stroke="#bfdbfe"/>
+  <text x="90" y="220" class="boxTitle">Web 前端（Browser）</text>
+  <text x="90" y="246" class="boxText">React 18 + TypeScript + Ant Design</text>
+  <text x="90" y="267" class="boxText">Zustand Store + React Router</text>
+  <text x="90" y="288" class="boxText">API Client：/api 前缀 fetch 封装</text>
+  <rect x="90" y="303" width="124" height="24" rx="12" fill="#dbeafe"/>
+  <text x="103" y="320" class="chip">frontend/src/*</text>
+
+  <rect x="430" y="190" width="300" height="150" rx="12" fill="#ffffff" stroke="#bfdbfe"/>
+  <text x="450" y="220" class="boxTitle">iOS App（SwiftUI）</text>
+  <text x="450" y="246" class="boxText">设备列表 / 控制 / 产品浏览</text>
+  <text x="450" y="267" class="boxText">APIService 直连 http://localhost:3001/api</text>
+  <text x="450" y="288" class="boxText">支持设备属性 get/set（miio 风格）</text>
+  <rect x="450" y="303" width="300" height="24" rx="12" fill="#dbeafe"/>
+  <text x="463" y="320" class="chip">App/ios/.../Services/APIService.swift</text>
+
+  <rect x="790" y="190" width="350" height="150" rx="12" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="810" y="220" class="boxTitle">后端 API（Express :3001）</text>
+  <text x="810" y="246" class="boxText">路由：products / thingModel / plugins / push</text>
+  <text x="810" y="267" class="boxText">扩展：devices / firmware / app-push / whitelist</text>
+  <text x="810" y="288" class="boxText">静态文件：/uploads，健康检查：/api/health</text>
+  <rect x="810" y="303" width="190" height="24" rx="12" fill="#dbeafe"/>
+  <text x="823" y="320" class="chip">backend/src/index.ts</text>
+
+  <rect x="1200" y="190" width="320" height="150" rx="12" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="1220" y="220" class="boxTitle">存储层（JSON 文件）</text>
+  <text x="1220" y="246" class="boxText">JsonStore 原子读写（tmp + rename）</text>
+  <text x="1220" y="267" class="boxText">业务数据：backend/data/*.json</text>
+  <text x="1220" y="288" class="boxText">插件包：backend/data/uploads/</text>
+  <rect x="1220" y="303" width="196" height="24" rx="12" fill="#dbeafe"/>
+  <text x="1233" y="320" class="chip">backend/src/storage/jsonStore.ts</text>
+
+  <line x1="370" y1="265" x2="430" y2="265" stroke="#64748b" stroke-width="2.2" marker-end="url(#arrow)"/>
+  <text x="377" y="252" class="arrowText">HTTP/JSON</text>
+
+  <line x1="730" y1="265" x2="790" y2="265" stroke="#64748b" stroke-width="2.2" marker-end="url(#arrow)"/>
+  <text x="736" y="252" class="arrowText">REST</text>
+
+  <line x1="1140" y1="265" x2="1200" y2="265" stroke="#64748b" stroke-width="2.2" marker-end="url(#arrow)"/>
+  <text x="1147" y="252" class="arrowText">CRUD</text>
+
+  <rect x="70" y="380" width="1070" height="140" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="90" y="410" class="boxTitle">共享类型与工程组织（Monorepo）</text>
+  <text x="90" y="436" class="boxText">shared 包：@iot-platform/shared（产品、物模型、插件、推送等类型）</text>
+  <text x="90" y="458" class="boxText">根工程：npm workspaces + concurrently；npm run dev 同时启动前后端</text>
+  <text x="90" y="480" class="boxText">开发态：Vite 将 /api 代理到 :3001</text>
+  <rect x="900" y="448" width="220" height="24" rx="12" fill="#dbeafe"/>
+  <text x="914" y="465" class="chip">shared/src/*.ts</text>
+
+  <rect x="40" y="580" width="1520" height="350" rx="16" fill="#ecfeff" stroke="#bae6fd"/>
+  <text x="60" y="615" class="section">CentOS 生产部署（deploy-centos.md）</text>
+
+  <rect x="90" y="655" width="260" height="120" rx="12" fill="#ffffff" stroke="#a5f3fc"/>
+  <text x="110" y="684" class="boxTitle">公网用户</text>
+  <text x="110" y="709" class="boxText">浏览器访问 HTTP:80</text>
+  <text x="110" y="730" class="boxText">请求页面与 /api 接口</text>
+
+  <rect x="420" y="655" width="320" height="170" rx="12" fill="#ffffff" stroke="#67e8f9"/>
+  <text x="440" y="684" class="boxTitle">Nginx（80）</text>
+  <text x="440" y="709" class="boxText">root: frontend/dist（静态资源）</text>
+  <text x="440" y="730" class="boxText">/api/* 反向代理 -&gt; 127.0.0.1:3001</text>
+  <text x="440" y="751" class="boxText">/uploads/* 反向代理 -&gt; 127.0.0.1:3001</text>
+  <text x="440" y="772" class="boxText">SPA 回退：try_files -&gt; /index.html</text>
+
+  <rect x="810" y="655" width="320" height="170" rx="12" fill="#ffffff" stroke="#22d3ee"/>
+  <text x="830" y="684" class="boxTitle">PM2 托管 Node 进程</text>
+  <text x="830" y="709" class="boxText">进程名：iot-backend</text>
+  <text x="830" y="730" class="boxText">入口：backend/dist/.../index.js</text>
+  <text x="830" y="751" class="boxText">应用端口：3001</text>
+  <text x="830" y="772" class="boxText">健康检查：/api/health</text>
+
+  <rect x="1200" y="655" width="300" height="170" rx="12" fill="#ffffff" stroke="#22d3ee"/>
+  <text x="1220" y="684" class="boxTitle">运行时文件系统</text>
+  <text x="1220" y="709" class="boxText">/opt/iot-platform/frontend/dist</text>
+  <text x="1220" y="730" class="boxText">/opt/iot-platform/backend/data/*.json</text>
+  <text x="1220" y="751" class="boxText">/opt/iot-platform/backend/data/uploads</text>
+  <text x="1220" y="772" class="boxText">PM2 持久化与开机自启</text>
+
+  <line x1="350" y1="715" x2="420" y2="715" stroke="#0f766e" stroke-width="2.2" marker-end="url(#arrow)"/>
+  <text x="360" y="702" class="arrowText">HTTP</text>
+
+  <line x1="740" y1="740" x2="810" y2="740" stroke="#0f766e" stroke-width="2.2" marker-end="url(#arrow)"/>
+  <text x="752" y="727" class="arrowText">proxy /api</text>
+
+  <line x1="1130" y1="740" x2="1200" y2="740" stroke="#0f766e" stroke-width="2.2" marker-end="url(#arrow)"/>
+  <text x="1140" y="727" class="arrowText">读写数据</text>
+</svg>
