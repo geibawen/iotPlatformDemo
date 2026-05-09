@@ -39,7 +39,7 @@ const ProductList: React.FC = () => {
     return matchSearch && matchCategory;
   });
 
-  const handleCreate = async (values: Partial<Product>) => {
+  const handleCreate = async (values: Partial<Product> & { baseProductId?: string }) => {
     try {
       await addProduct({ ...values, status: 'draft' });
       message.success('产品创建成功');
@@ -202,6 +202,7 @@ const ProductList: React.FC = () => {
       <ProductForm
         open={formOpen}
         initialValues={editingProduct}
+        products={products}
         onOk={editingProduct ? handleEdit : handleCreate}
         onCancel={() => {
           setFormOpen(false);

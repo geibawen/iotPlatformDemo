@@ -9,6 +9,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   CloudServerOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import type { MenuProps } from 'antd';
@@ -34,6 +35,11 @@ const menuItems: MenuProps['items'] = [
     label: '概览',
   },
   {
+    key: '/roadmap',
+    icon: <ApartmentOutlined />,
+    label: 'Roadmap',
+  },
+  {
     key: '/products',
     icon: <AppstoreOutlined />,
     label: '产品管理',
@@ -44,9 +50,13 @@ const menuItems: MenuProps['items'] = [
     label: '设备管理',
   },
   {
-    key: '/plugins',
+    key: 'plugins',
     icon: <ApiOutlined />,
     label: '插件管理',
+    children: [
+      { key: '/plugins/device', label: '设备插件管理' },
+      { key: '/plugins/functional', label: '功能插件管理' },
+    ],
   },
   {
     key: 'firmware',
@@ -91,8 +101,11 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const currentRole = resolveRole(location.pathname);
 
-  const selectedKey = location.pathname;
+  const selectedKey = location.pathname === '/plugins' || location.pathname.startsWith('/plugins/')
+    ? (location.pathname === '/plugins/functional' ? '/plugins/functional' : '/plugins/device')
+    : location.pathname;
   const openKeys = [
+    ...(selectedKey.startsWith('/plugins') ? ['plugins'] : []),
     ...(selectedKey.startsWith('/push') ? ['push'] : []),
     ...(selectedKey.startsWith('/firmware') || selectedKey.startsWith('/ota-tasks') ? ['firmware'] : []),
     ...(selectedKey.startsWith('/app-push') ? ['app-push'] : []),

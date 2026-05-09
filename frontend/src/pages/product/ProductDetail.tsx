@@ -18,6 +18,10 @@ const ProductDetail: React.FC = () => {
   const navigate = useNavigate();
   const allProducts = useProductStore((s) => s.products);
   const product = useMemo(() => allProducts.find((p) => p.id === id), [allProducts, id]);
+  const inheritedFromProduct = useMemo(
+    () => allProducts.find((p) => p.id === product?.inheritedFromProductId),
+    [allProducts, product?.inheritedFromProductId]
+  );
   const updateProduct = useProductStore((s) => s.updateProduct);
   const allPlugins = usePluginStore((s) => s.plugins);
   const plugins = useMemo(() => allPlugins.filter((p) => p.productIds.includes(id || '')), [allPlugins, id]);
@@ -72,6 +76,9 @@ const ProductDetail: React.FC = () => {
           </Descriptions.Item>
           <Descriptions.Item label="产品分类">{PRODUCT_CATEGORY_LABELS[product.category]}</Descriptions.Item>
           <Descriptions.Item label="连接方式">{CONNECTION_TYPE_LABELS[product.connectionType]}</Descriptions.Item>
+          <Descriptions.Item label="物模型来源" span={2}>
+            {inheritedFromProduct ? inheritedFromProduct.name : (product.inheritedFromProductId ? product.inheritedFromProductId : '未继承')}
+          </Descriptions.Item>
           <Descriptions.Item label="描述" span={2}>{product.description || '-'}</Descriptions.Item>
           <Descriptions.Item label="创建时间">{dayjs(product.createdAt).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
           <Descriptions.Item label="更新时间">{dayjs(product.updatedAt).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
@@ -112,9 +119,11 @@ const ProductDetail: React.FC = () => {
               style={{ marginBottom: 8, cursor: 'pointer' }}
               onClick={() => navigate(`/plugins/${p.id}`)}
             >
-              <Space>
+              <Space wrap>
                 <strong>{p.name}</strong>
-                <Tag>{p.platform}</Tag>
+                {p.platforms.map((platform) => (
+                  <Tag key={platform}>{platform}</Tag>
+                ))}
                 <Tag color={p.status === 'active' ? 'green' : 'default'}>
                   {p.status === 'active' ? '启用' : '停用'}
                 </Tag>

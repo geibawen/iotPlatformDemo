@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Table, Button, Space, Tag, Popconfirm, message, Card, Typography } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ApartmentOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { usePluginStore } from '../../stores/pluginStore';
 import { useProductStore } from '../../stores/productStore';
 import PluginForm from '../../components/plugin/PluginForm';
-import type { Plugin, PluginPlatform } from '../../types/plugin';
-import { PLUGIN_PLATFORM_LABELS } from '../../types/plugin';
+import PluginTopologyModal from '../../components/plugin/PluginTopologyModal';
+import type { Plugin } from '../../types/plugin';
+import { PLATFORM_LABELS, PLUGIN_TYPE_LABELS } from '../../types/plugin';
 import dayjs from 'dayjs';
 
 const PluginList: React.FC = () => {
@@ -19,6 +20,7 @@ const PluginList: React.FC = () => {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Plugin | undefined>();
+  const [topologyOpen, setTopologyOpen] = useState(false);
 
   const handleCreate = async (values: Partial<Plugin>) => {
     try {
@@ -62,11 +64,31 @@ const PluginList: React.FC = () => {
       ),
     },
     {
-      title: '平台',
-      dataIndex: 'platform',
-      key: 'platform',
-      width: 120,
-      render: (platform: PluginPlatform) => PLUGIN_PLATFORM_LABELS[platform],
+      title: '类型',
+      dataIndex: 'type',
+      key: 'type',
+      width: 100,
+      render: (type: string) => (
+        <Tag color={type === 'device' ? 'blue' : 'cyan'}>
+          {PLUGIN_TYPE_LABELS[type as keyof typeof PLUGIN_TYPE_LABELS] || '设备插件'}
+        </Tag>
+      ),
+    },
+    {
+      title: '平台支持',
+      dataIndex: 'platforms',
+      key: 'platforms',
+      width: 150,
+      render: (platforms: unknown) => {
+        const safePlatforms = Array.isArray(platforms) ? platforms : ['iOS', 'Android'];
+        return (
+        <Space wrap>
+          {safePlatforms.map((p) => (
+            <Tag key={p}>{PLATFORM_LABELS[p as keyof typeof PLATFORM_LABELS]}</Tag>
+          ))}
+        </Space>
+      );
+      },
     },
     {
       title: '关联产品',
@@ -74,11 +96,11 @@ const PluginList: React.FC = () => {
       width: 200,
       render: (_: unknown, record: Plugin) => (
         <Space wrap>
-          {record.productIds.map((pid) => {
+          {(Array.isArray(record.productIds) ? record.productIds : []).map((pid) => {
             const p = products.find((prod) => prod.id === pid);
             return p ? <Tag key={pid}>{p.name}</Tag> : null;
           })}
-          {record.productIds.length === 0 && <span style={{ color: '#999' }}>未关联</span>}
+          {(!Array.isArray(record.productIds) || record.productIds.length === 0) && <span style={{ color: '#999' }}>未关联</span>}
         </Space>
       ),
     },
@@ -131,16 +153,21 @@ const PluginList: React.FC = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Typography.Title level={4} style={{ margin: 0 }}>插件管理</Typography.Title>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setEditing(undefined);
-            setFormOpen(true);
-          }}
-        >
-          创建插件
-        </Button>
+        <Space>
+          <Button icon={<ApartmentOutlined />} onClick={() => setTopologyOpen(true)}>
+            插件拓扑图
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditing(undefined);
+              setFormOpen(true);
+            }}
+          >
+            创建插件
+          </Button>
+        </Space>
       </div>
       <Card>
         <Table
@@ -158,6 +185,12 @@ const PluginList: React.FC = () => {
           setFormOpen(false);
           setEditing(undefined);
         }}
+      />
+      <PluginTopologyModal
+        open={topologyOpen}
+        plugins={plugins}
+        products={products}
+        onCancel={() => setTopologyOpen(false)}
       />
     </div>
   );

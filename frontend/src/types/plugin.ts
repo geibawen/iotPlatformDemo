@@ -1,12 +1,21 @@
-export type PluginPlatform = 'iOS' | 'Android' | 'both';
+export type PluginType = 'functional' | 'device';
+export type Platform = 'iOS' | 'Android' | 'HarmonyOS';
 export type PluginStatus = 'active' | 'inactive';
 export type VersionStatus = 'draft' | 'waiting_test' | 'testing' | 'approved' | 'rejected' | 'online' | 'offline';
+
+export interface PluginVersionFile {
+  platform: Platform;
+  fileName: string;
+  fileSize: number;
+  filePath: string;
+}
 
 export interface Plugin {
   id: string;
   name: string;
   description: string;
-  platform: PluginPlatform;
+  type: PluginType;
+  platforms: Platform[];
   productIds: string[];
   status: PluginStatus;
   createdAt: string;
@@ -18,16 +27,20 @@ export interface PluginVersion {
   pluginId: string;
   version: string;
   releaseNotes: string;
-  fileName: string;
-  fileSize: number; // bytes
+  files: PluginVersionFile[];
   status: VersionStatus;
   createdAt: string;
 }
 
-export const PLUGIN_PLATFORM_LABELS: Record<PluginPlatform, string> = {
+export const PLUGIN_TYPE_LABELS: Record<PluginType, string> = {
+  functional: '功能插件',
+  device: '设备插件',
+};
+
+export const PLATFORM_LABELS: Record<Platform, string> = {
   iOS: 'iOS',
-  Android: 'Android',
-  both: 'iOS & Android',
+  Android: '安卓',
+  HarmonyOS: '鸿蒙',
 };
 
 export const VERSION_STATUS_LABELS: Record<VersionStatus, string> = {

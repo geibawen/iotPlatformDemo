@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Table, Button, Space, Popconfirm, Tag, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Popconfirm, Tag, message, Alert } from 'antd';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useThingModelStore } from '../../stores/thingModelStore';
 import PropertyForm from './PropertyForm';
 import type { ThingModelProperty, DataType, AccessMode } from '../../types/thingModel';
@@ -13,22 +13,11 @@ interface PropertyTableProps {
 const PropertyTable: React.FC<PropertyTableProps> = ({ productId }) => {
   const allProperties = useThingModelStore((s) => s.properties);
   const properties = useMemo(() => allProperties.filter((p) => p.productId === productId), [allProperties, productId]);
-  const addProperty = useThingModelStore((s) => s.addProperty);
   const updateProperty = useThingModelStore((s) => s.updateProperty);
   const deleteProperty = useThingModelStore((s) => s.deleteProperty);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ThingModelProperty | undefined>();
-
-  const handleCreate = async (values: Partial<ThingModelProperty>) => {
-    try {
-      await addProperty(productId, values);
-      message.success('属性添加成功');
-      setFormOpen(false);
-    } catch {
-      message.error('添加失败');
-    }
-  };
 
   const handleEdit = async (values: Partial<ThingModelProperty>) => {
     if (editing) {
@@ -106,16 +95,15 @@ const PropertyTable: React.FC<PropertyTableProps> = ({ productId }) => {
 
   return (
     <div>
+      <Alert
+        type="info"
+        showIcon
+        message="属性必须归属于某个服务，请在“服务 (Service)”Tab 中选择服务后新增属性。"
+        style={{ marginBottom: 12 }}
+      />
       <div style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setEditing(undefined);
-            setFormOpen(true);
-          }}
-        >
-          添加属性
+        <Button type="primary" disabled>
+          添加属性（请在服务中新增）
         </Button>
       </div>
       <Table
@@ -129,7 +117,7 @@ const PropertyTable: React.FC<PropertyTableProps> = ({ productId }) => {
       <PropertyForm
         open={formOpen}
         initialValues={editing}
-        onOk={editing ? handleEdit : handleCreate}
+        onOk={handleEdit}
         onCancel={() => {
           setFormOpen(false);
           setEditing(undefined);

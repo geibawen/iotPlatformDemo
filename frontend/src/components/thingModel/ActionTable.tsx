@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Table, Button, Space, Popconfirm, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Popconfirm, message, Alert } from 'antd';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useThingModelStore } from '../../stores/thingModelStore';
 import ActionForm from './ActionForm';
 import type { ThingModelAction } from '../../types/thingModel';
@@ -12,22 +12,11 @@ interface ActionTableProps {
 const ActionTable: React.FC<ActionTableProps> = ({ productId }) => {
   const allActions = useThingModelStore((s) => s.actions);
   const actions = useMemo(() => allActions.filter((a) => a.productId === productId), [allActions, productId]);
-  const addAction = useThingModelStore((s) => s.addAction);
   const updateAction = useThingModelStore((s) => s.updateAction);
   const deleteAction = useThingModelStore((s) => s.deleteAction);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ThingModelAction | undefined>();
-
-  const handleCreate = async (values: Partial<ThingModelAction>) => {
-    try {
-      await addAction(productId, values);
-      message.success('动作添加成功');
-      setFormOpen(false);
-    } catch {
-      message.error('添加失败');
-    }
-  };
 
   const handleEdit = async (values: Partial<ThingModelAction>) => {
     if (editing) {
@@ -91,23 +80,22 @@ const ActionTable: React.FC<ActionTableProps> = ({ productId }) => {
 
   return (
     <div>
+      <Alert
+        type="info"
+        showIcon
+        message="动作必须归属于某个服务，请在“服务 (Service)”Tab 中选择服务后新增动作。"
+        style={{ marginBottom: 12 }}
+      />
       <div style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setEditing(undefined);
-            setFormOpen(true);
-          }}
-        >
-          添加动作
+        <Button type="primary" disabled>
+          添加动作（请在服务中新增）
         </Button>
       </div>
       <Table dataSource={actions} columns={columns} rowKey="id" size="small" pagination={false} virtual={false} />
       <ActionForm
         open={formOpen}
         initialValues={editing}
-        onOk={editing ? handleEdit : handleCreate}
+        onOk={handleEdit}
         onCancel={() => {
           setFormOpen(false);
           setEditing(undefined);

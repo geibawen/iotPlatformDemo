@@ -1,18 +1,16 @@
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select } from 'antd';
-import type { ThingModelService, ThingModelProperty, ThingModelAction } from '../../types/thingModel';
+import { Modal, Form, Input } from 'antd';
+import type { ThingModelService } from '../../types/thingModel';
 
 interface ServiceFormProps {
   open: boolean;
   initialValues?: ThingModelService;
-  properties: ThingModelProperty[];
-  actions: ThingModelAction[];
   onOk: (values: Partial<ThingModelService>) => void;
   onCancel: () => void;
 }
 
 const ServiceForm: React.FC<ServiceFormProps> = ({
-  open, initialValues, properties, actions, onOk, onCancel,
+  open, initialValues, onOk, onCancel,
 }) => {
   const [form] = Form.useForm();
   const isEdit = !!initialValues?.id;
@@ -65,28 +63,6 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
         </Form.Item>
         <Form.Item name="description" label="描述">
           <Input.TextArea placeholder="服务描述" rows={2} />
-        </Form.Item>
-        <Form.Item name="propertyIds" label="关联属性">
-          <Select
-            mode="multiple"
-            placeholder="选择要关联的属性"
-            optionFilterProp="label"
-            options={properties.map((p) => ({
-              value: p.id,
-              label: `${p.name} (${p.identifier})`,
-            }))}
-          />
-        </Form.Item>
-        <Form.Item name="actionIds" label="关联动作">
-          <Select
-            mode="multiple"
-            placeholder="选择要关联的动作"
-            optionFilterProp="label"
-            options={actions.map((a) => ({
-              value: a.id,
-              label: `${a.name} (${a.identifier})`,
-            }))}
-          />
         </Form.Item>
       </Form>
     </Modal>

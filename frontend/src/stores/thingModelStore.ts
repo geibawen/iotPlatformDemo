@@ -8,10 +8,10 @@ interface ThingModelStore {
   services: ThingModelService[];
   loading: boolean;
   loadByProduct: (productId: string) => Promise<void>;
-  addProperty: (productId: string, data: Partial<ThingModelProperty>) => Promise<void>;
+  addProperty: (productId: string, data: Partial<ThingModelProperty> & { serviceId: string }) => Promise<void>;
   updateProperty: (id: string, data: Partial<ThingModelProperty>) => Promise<void>;
   deleteProperty: (id: string) => Promise<void>;
-  addAction: (productId: string, data: Partial<ThingModelAction>) => Promise<void>;
+  addAction: (productId: string, data: Partial<ThingModelAction> & { serviceId: string }) => Promise<void>;
   updateAction: (id: string, data: Partial<ThingModelAction>) => Promise<void>;
   deleteAction: (id: string) => Promise<void>;
   addService: (productId: string, data: Partial<ThingModelService>) => Promise<void>;
@@ -37,6 +37,7 @@ export const useThingModelStore = create<ThingModelStore>((set, get) => ({
   addProperty: async (productId, data) => {
     const created = await api.post<ThingModelProperty>(`/products/${productId}/properties`, data);
     set({ properties: [...get().properties, created] });
+    await get().loadByProduct(productId);
   },
   updateProperty: async (id, data) => {
     const updated = await api.put<ThingModelProperty>(`/properties/${id}`, data);
@@ -49,6 +50,7 @@ export const useThingModelStore = create<ThingModelStore>((set, get) => ({
   addAction: async (productId, data) => {
     const created = await api.post<ThingModelAction>(`/products/${productId}/actions`, data);
     set({ actions: [...get().actions, created] });
+    await get().loadByProduct(productId);
   },
   updateAction: async (id, data) => {
     const updated = await api.put<ThingModelAction>(`/actions/${id}`, data);

@@ -4,10 +4,10 @@ import { Card, Descriptions, Tag, Button, Tabs, Space, message, Typography, Empt
 import { EditOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { usePluginStore } from '../../stores/pluginStore';
 import { useProductStore } from '../../stores/productStore';
-import { PLUGIN_PLATFORM_LABELS } from '../../types/plugin';
+import { PLATFORM_LABELS, PLUGIN_TYPE_LABELS } from '../../types/plugin';
 import PluginForm from '../../components/plugin/PluginForm';
 import VersionManager from '../../components/plugin/VersionManager';
-import type { Plugin } from '../../types/plugin';
+import type { Plugin, Platform } from '../../types/plugin';
 import dayjs from 'dayjs';
 
 const PluginDetail: React.FC = () => {
@@ -24,7 +24,7 @@ const PluginDetail: React.FC = () => {
     return (
       <div style={{ textAlign: 'center', paddingTop: 80 }}>
         <Empty description="插件不存在">
-          <Button type="primary" onClick={() => navigate('/plugins')}>返回插件列表</Button>
+          <Button type="primary" onClick={() => navigate('/plugins/device')}>返回插件列表</Button>
         </Empty>
       </div>
     );
@@ -49,7 +49,11 @@ const PluginDetail: React.FC = () => {
     }
   };
 
-  const associatedProducts = products.filter((p) => plugin.productIds.includes(p.id));
+  const pluginProductIds = Array.isArray(plugin.productIds) ? plugin.productIds : [];
+  const pluginPlatforms: Platform[] = Array.isArray(plugin.platforms)
+    ? (plugin.platforms as Platform[])
+    : ['iOS', 'Android'];
+  const associatedProducts = products.filter((p) => pluginProductIds.includes(p.id));
 
   const tabItems = [
     {
@@ -70,8 +74,14 @@ const PluginDetail: React.FC = () => {
               />
             </Space>
           </Descriptions.Item>
-          <Descriptions.Item label="支持平台">{PLUGIN_PLATFORM_LABELS[plugin.platform]}</Descriptions.Item>
-          <Descriptions.Item label="插件类型">React Native</Descriptions.Item>
+          <Descriptions.Item label="插件类型">{PLUGIN_TYPE_LABELS[plugin.type]}</Descriptions.Item>
+          <Descriptions.Item label="支持平台">
+            <Space wrap>
+              {pluginPlatforms.map((p) => (
+                <Tag key={p} color="blue">{PLATFORM_LABELS[p as keyof typeof PLATFORM_LABELS]}</Tag>
+              ))}
+            </Space>
+          </Descriptions.Item>
           <Descriptions.Item label="描述" span={2}>{plugin.description || '-'}</Descriptions.Item>
           <Descriptions.Item label="创建时间">{dayjs(plugin.createdAt).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
           <Descriptions.Item label="更新时间">{dayjs(plugin.updatedAt).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
@@ -96,7 +106,7 @@ const PluginDetail: React.FC = () => {
     {
       key: 'versions',
       label: '版本管理',
-      children: <VersionManager pluginId={plugin.id} />,
+      children: <VersionManager pluginId={plugin.id} platforms={pluginPlatforms} />,
     },
   ];
 
@@ -104,7 +114,7 @@ const PluginDetail: React.FC = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/plugins')}>返回</Button>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/plugins/device')}>返回</Button>
           <Typography.Title level={4} style={{ margin: 0 }}>{plugin.name}</Typography.Title>
           <Tag color={plugin.status === 'active' ? 'green' : 'default'}>
             {plugin.status === 'active' ? '启用' : '停用'}

@@ -6,7 +6,7 @@ interface ProductStore {
   products: Product[];
   loading: boolean;
   fetchProducts: () => Promise<void>;
-  addProduct: (data: Partial<Product>) => Promise<Product>;
+  addProduct: (data: Partial<Product> & { baseProductId?: string }) => Promise<Product>;
   updateProduct: (id: string, data: Partial<Product>) => Promise<Product>;
   deleteProduct: (id: string) => Promise<void>;
   getProduct: (id: string) => Product | undefined;

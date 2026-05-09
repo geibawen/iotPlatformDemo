@@ -25,9 +25,14 @@
 |------|------|------|--------|------|
 | GET | `/` | 产品列表 | `?search=keyword`（可选） | `Product[]` |
 | GET | `/:id` | 产品详情 | — | `Product` |
-| POST | `/` | 创建产品 | `Product`（不含 id/时间戳） | `Product`（201） |
+| POST | `/` | 创建产品 | `Product`（不含 id/时间戳）+ `baseProductId?` | `Product`（201） |
 | PUT | `/:id` | 更新产品 | `Partial<Product>` | `Product` |
 | DELETE | `/:id` | 删除产品 | — | 204 |
+
+创建产品支持可选字段：
+
+- `baseProductId?: string`：指定后，系统会将该产品的完整物模型（服务/属性/动作）克隆到新产品。
+- 返回的 `Product` 中会包含 `inheritedFromProductId` 字段，用于记录继承来源。
 
 ---
 
@@ -69,7 +74,7 @@
 | 方法 | 路径 | 说明 | 请求体 | 响应 |
 |------|------|------|--------|------|
 | GET | `/products/:pid/properties` | 产品属性列表 | — | `ThingModelProperty[]` |
-| POST | `/products/:pid/properties` | 创建属性 | `Property`（不含 id/productId/时间戳） | `ThingModelProperty`（201） |
+| POST | `/products/:pid/properties` | 创建属性 | `Property + serviceId`（不含 id/productId/时间戳） | `ThingModelProperty`（201） |
 | PUT | `/properties/:id` | 更新属性 | `Partial<ThingModelProperty>` | `ThingModelProperty` |
 | DELETE | `/properties/:id` | 删除属性 | — | 204 |
 
@@ -78,7 +83,7 @@
 | 方法 | 路径 | 说明 | 请求体 | 响应 |
 |------|------|------|--------|------|
 | GET | `/products/:pid/actions` | 产品动作列表 | — | `ThingModelAction[]` |
-| POST | `/products/:pid/actions` | 创建动作 | `Action`（不含 id/productId/时间戳） | `ThingModelAction`（201） |
+| POST | `/products/:pid/actions` | 创建动作 | `Action + serviceId`（不含 id/productId/时间戳） | `ThingModelAction`（201） |
 | PUT | `/actions/:id` | 更新动作 | `Partial<ThingModelAction>` | `ThingModelAction` |
 | DELETE | `/actions/:id` | 删除动作 | — | 204 |
 
@@ -89,7 +94,13 @@
 | GET | `/products/:pid/services` | 产品服务列表 | — | `ThingModelService[]` |
 | POST | `/products/:pid/services` | 创建服务 | `Service`（不含 id/productId/时间戳） | `ThingModelService`（201） |
 | PUT | `/services/:id` | 更新服务 | `Partial<ThingModelService>` | `ThingModelService` |
-| DELETE | `/services/:id` | 删除服务 | — | 204 |
+| DELETE | `/services/:id` | 删除服务 | — | 204（级联删除该服务下属性与动作） |
+
+**物模型约束（服务优先）**：
+- 必须先创建服务，才能创建属性和动作
+- 创建属性/动作时必须传 `serviceId`，且该服务必须属于当前产品
+- 删除属性/动作时，会自动从所属服务引用中移除
+- 删除服务时，会级联删除其关联属性与动作
 
 ### 批量删除
 
@@ -111,6 +122,26 @@
 | PUT | `/:id` | 更新插件 | `Partial<Plugin>` | `Plugin` |
 | DELETE | `/:id` | 删除插件 | — | 204（同时删除关联版本） |
 
+**Plugin 结构**（设备插件）：
+
+```json
+{
+  "id": "plug-001",
+  "name": "智能灯控插件",
+  "description": "用于控制智能灯泡系列产品的设备插件",
+  "type": "device",
+  "platforms": ["iOS", "Android", "HarmonyOS"],
+  "productIds": ["prod-001"],
+  "status": "active",
+  "createdAt": "2026-03-25T08:00:00.000Z",
+  "updatedAt": "2026-04-12T14:00:00.000Z"
+}
+```
+
+**字段说明**：
+- `type`: 插件类型，`'device'`（设备插件）或 `'functional'`（功能插件）
+- `platforms`: 支持的平台数组，可选值：`'iOS'`、`'Android'`、`'HarmonyOS'`
+
 ### 版本
 
 | 方法 | 路径 | 说明 | 请求体 | 响应 |
@@ -124,13 +155,43 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| file | File | 否 | 插件包文件（最大 50MB） |
+| files | File[] | 是 | 多平台插件包文件（每个平台一个，最大 50MB） |
+| platforms | JSON string | 是 | 平台列表 JSON（如 `["iOS","Android"]`），**必须包含 iOS 和 Android** |
 | version | string | 是 | 版本号（如 `1.0.0`） |
 | releaseNotes | string | 否 | 发布说明 |
-| fileName | string | 否 | 自定义文件名（无 file 时用） |
-| fileSize | number | 否 | 自定义文件大小（无 file 时用） |
 
-上传的文件保存在 `backend/data/uploads/`，使用 UUID 作为磁盘文件名。
+**PluginVersion 中的 files 字段**：
+
+```json
+{
+  "id": "ver-001",
+  "pluginId": "plug-001",
+  "version": "1.0.0",
+  "releaseNotes": "初始版本，支持开关、调光、色温调节功能",
+  "files": [
+    {
+      "platform": "iOS",
+      "fileName": "light-control-1.0.0.ipa",
+      "fileSize": 2048576,
+      "filePath": "/uploads/xxx-1.ipa"
+    },
+    {
+      "platform": "Android",
+      "fileName": "light-control-1.0.0.apk",
+      "fileSize": 2048576,
+      "filePath": "/uploads/xxx-2.apk"
+    }
+  ],
+  "status": "online",
+  "createdAt": "2026-03-28T10:00:00.000Z"
+}
+```
+
+**业务约束**：
+- 创建版本时，文件个数 = 平台个数
+- `platforms` 必须包含 `'iOS'` 和 `'Android'`，`'HarmonyOS'` 可选
+- 违反平台约束返回 `400`：`{ error: "必须包含 iOS 和 Android 平台" }`
+- 文件个数不匹配返回 `400`：`{ error: "平台数量与文件数量不匹配" }`
 
 ---
 

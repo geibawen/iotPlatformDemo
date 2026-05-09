@@ -17,6 +17,7 @@
 | category | ProductCategory | 产品分类 |
 | connectionType | ConnectionType | 连接方式 |
 | status | ProductStatus | 状态：draft / published |
+| inheritedFromProductId | string? | 继承来源产品 ID（可选） |
 | createdAt | string | 创建时间 |
 | updatedAt | string | 更新时间 |
 
@@ -94,6 +95,9 @@ WiFi / BLE / Zigbee / Z-Wave / Cellular / Ethernet
 | inputParams | ActionParam[] | 输入参数列表 |
 | outputParams | ActionParam[] | 输出参数列表 |
 
+约束：
+- 动作必须归属于某个服务（通过 `ThingModelService.actionIds` 关联）
+
 #### ActionParam
 
 | 字段 | 类型 | 说明 |
@@ -114,6 +118,11 @@ WiFi / BLE / Zigbee / Z-Wave / Cellular / Ethernet
 | propertyIds | string[] | 关联属性 ID 列表 |
 | actionIds | string[] | 关联动作 ID 列表 |
 
+服务优先约束：
+- 必须先创建服务，才能创建属性和动作
+- 创建属性/动作时必须指定 `serviceId`（接口请求字段）
+- 删除服务会级联删除其关联属性与动作
+
 ---
 
 ## 插件（Plugin）
@@ -123,11 +132,15 @@ WiFi / BLE / Zigbee / Z-Wave / Cellular / Ethernet
 | id | string | 插件唯一标识 |
 | name | string | 插件名称 |
 | description | string | 插件描述 |
-| platform | PluginPlatform | 目标平台：iOS / Android / both |
+| type | PluginType | 插件类型：`'device'`（设备插件）/ `'functional'`（功能插件） |
+| platforms | Platform[] | 支持的平台列表：`'iOS'` / `'Android'` / `'HarmonyOS'` |
 | productIds | string[] | 关联产品 ID 列表（多对多） |
-| status | PluginStatus | 状态：active / inactive |
+| status | PluginStatus | 状态：`'active'` / `'inactive'` |
 | createdAt | string | 创建时间 |
 | updatedAt | string | 更新时间 |
+
+**约束**：
+- `type` 为 `'device'` 时，`platforms` 必须至少包含 `'iOS'` 和 `'Android'`，可选包含 `'HarmonyOS'`
 
 ### 插件版本（PluginVersion）
 
@@ -135,14 +148,25 @@ WiFi / BLE / Zigbee / Z-Wave / Cellular / Ethernet
 |------|------|------|
 | id | string | 版本唯一标识 |
 | pluginId | string | 所属插件 ID |
-| version | string | 版本号（如 1.0.0） |
+| version | string | 版本号（如 1.0.0，语义化版本） |
 | releaseNotes | string | 发布说明 |
-| fileName | string | 包文件名 |
-| fileSize | number | 包大小（bytes） |
-| status | VersionStatus | 状态流转：draft → testing → released |
+| files | PluginVersionFile[] | 多平台文件列表 |
+| status | VersionStatus | 状态流转：draft → waiting_test → testing → approved → online（↔ offline） |
 | createdAt | string | 创建时间 |
 
-> **真实文件上传**：创建版本时通过 `multipart/form-data` 上传文件，multer 将文件保存到 `backend/data/uploads/`（UUID 文件名），最大 50MB。
+**PluginVersionFile 结构**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| platform | Platform | 平台：`'iOS'` / `'Android'` / `'HarmonyOS'` |
+| fileName | string | 包文件名 |
+| fileSize | number | 包大小（bytes） |
+| filePath | string | 服务器存储路径 |
+
+**约束**：
+- 创建版本时，`files` 个数必须 = `插件.platforms` 个数
+- 所有 `files` 的 `platform` 必须与插件 `platforms` 一一对应
+- 文件通过 `multipart/form-data` 上传，multer 保存到 `backend/data/uploads/`（UUID 文件名），单文件最大 50MB
 
 ---
 

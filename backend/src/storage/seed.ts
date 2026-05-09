@@ -48,14 +48,14 @@ export async function seedDataIfEmpty() {
     { id: 'svc-002', productId: 'prod-002', identifier: 'env_monitor', name: '环境监测服务', description: '温湿度数据采集与校准服务', propertyIds: ['prop-005', 'prop-006', 'prop-007'], actionIds: ['act-003'], createdAt: '2026-03-22T10:00:00.000Z', updatedAt: '2026-03-22T10:00:00.000Z' },
   ];
   const plugins: Plugin[] = [
-    { id: 'plug-001', name: '智能灯控插件', description: '用于控制智能灯泡系列产品的 React Native 插件', platform: 'both', productIds: ['prod-001'], status: 'active', createdAt: '2026-03-25T08:00:00.000Z', updatedAt: '2026-04-12T14:00:00.000Z' },
-    { id: 'plug-002', name: '传感器数据插件', description: '传感器数据展示与历史曲线插件', platform: 'both', productIds: ['prod-002'], status: 'active', createdAt: '2026-04-01T10:00:00.000Z', updatedAt: '2026-04-15T09:00:00.000Z' },
-    { id: 'plug-003', name: '网关管理插件', description: '网关子设备管理与配置插件', platform: 'iOS', productIds: ['prod-004'], status: 'inactive', createdAt: '2026-04-10T11:00:00.000Z', updatedAt: '2026-04-20T16:00:00.000Z' },
+    { id: 'plug-001', name: '智能灯控插件', description: '用于控制智能灯泡系列产品的设备插件', type: 'device', platforms: ['iOS', 'Android'], productIds: ['prod-001'], status: 'active', createdAt: '2026-03-25T08:00:00.000Z', updatedAt: '2026-04-12T14:00:00.000Z' },
+    { id: 'plug-002', name: '传感器数据插件', description: '传感器数据展示与历史曲线插件', type: 'device', platforms: ['iOS', 'Android', 'HarmonyOS'], productIds: ['prod-002'], status: 'active', createdAt: '2026-04-01T10:00:00.000Z', updatedAt: '2026-04-15T09:00:00.000Z' },
+    { id: 'plug-003', name: '网关管理插件', description: '网关子设备管理与配置插件', type: 'device', platforms: ['iOS', 'Android'], productIds: ['prod-004'], status: 'inactive', createdAt: '2026-04-10T11:00:00.000Z', updatedAt: '2026-04-20T16:00:00.000Z' },
   ];
   const versions: PluginVersion[] = [
-    { id: 'ver-001', pluginId: 'plug-001', version: '1.0.0', releaseNotes: '初始版本，支持开关、调光、色温调节功能', fileName: 'light-control-1.0.0.zip', fileSize: 2048576, status: 'online', createdAt: '2026-03-28T10:00:00.000Z' },
-    { id: 'ver-002', pluginId: 'plug-001', version: '1.1.0', releaseNotes: '新增呼吸灯效果、RGB颜色选择器', fileName: 'light-control-1.1.0.zip', fileSize: 2356224, status: 'testing', createdAt: '2026-04-12T14:00:00.000Z' },
-    { id: 'ver-003', pluginId: 'plug-002', version: '1.0.0', releaseNotes: '初始版本，支持实时温湿度展示和24小时历史曲线', fileName: 'sensor-data-1.0.0.zip', fileSize: 1756160, status: 'online', createdAt: '2026-04-05T09:00:00.000Z' },
+    { id: 'ver-001', pluginId: 'plug-001', version: '1.0.0', releaseNotes: '初始版本，支持开关、调光、色温调节功能', files: [{ platform: 'iOS', fileName: 'light-control-1.0.0.ipa', fileSize: 2048576, filePath: '' }, { platform: 'Android', fileName: 'light-control-1.0.0.apk', fileSize: 2048576, filePath: '' }], status: 'online', createdAt: '2026-03-28T10:00:00.000Z' },
+    { id: 'ver-002', pluginId: 'plug-001', version: '1.1.0', releaseNotes: '新增呼吸灯效果、RGB颜色选择器', files: [{ platform: 'iOS', fileName: 'light-control-1.1.0.ipa', fileSize: 2356224, filePath: '' }, { platform: 'Android', fileName: 'light-control-1.1.0.apk', fileSize: 2356224, filePath: '' }], status: 'testing', createdAt: '2026-04-12T14:00:00.000Z' },
+    { id: 'ver-003', pluginId: 'plug-002', version: '1.0.0', releaseNotes: '初始版本，支持实时温湿度展示和24小时历史曲线', files: [{ platform: 'iOS', fileName: 'sensor-data-1.0.0.ipa', fileSize: 1756160, filePath: '' }, { platform: 'Android', fileName: 'sensor-data-1.0.0.apk', fileSize: 1756160, filePath: '' }, { platform: 'HarmonyOS', fileName: 'sensor-data-1.0.0.hap', fileSize: 1756160, filePath: '' }], status: 'online', createdAt: '2026-04-05T09:00:00.000Z' },
   ];
   const channels: PushChannel[] = [
     { id: 'ch-001', name: '设备状态回调', type: 'http_callback', config: { url: 'https://api.example.com/iot/callback', method: 'POST', secret: 'sk_demo_xxxxx' }, status: 'active', createdAt: '2026-04-01T08:00:00.000Z', updatedAt: '2026-04-01T08:00:00.000Z' },

@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, Upload, message, Popconfirm } from 'antd';
+import { Table, Button, Space, Tag, Modal, Form, Input, Upload, message, Popconfirm, Divider, Alert } from 'antd';
 import { PlusOutlined, UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { usePluginStore } from '../../stores/pluginStore';
-import type { PluginVersion, VersionStatus } from '../../types/plugin';
-import { VERSION_STATUS_LABELS } from '../../types/plugin';
+import type { PluginVersion, VersionStatus, Platform } from '../../types/plugin';
+import { VERSION_STATUS_LABELS, PLATFORM_LABELS } from '../../types/plugin';
 import dayjs from 'dayjs';
 
 interface VersionManagerProps {
   pluginId: string;
+  platforms: Platform[];
 }
 
 const VERSION_STATUS_COLORS: Record<VersionStatus, string> = {
@@ -42,7 +43,7 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-const VersionManager: React.FC<VersionManagerProps> = ({ pluginId }) => {
+const VersionManager: React.FC<VersionManagerProps> = ({ pluginId, platforms }) => {
   const allVersions = usePluginStore((s) => s.versions);
   const versions = useMemo(() => allVersions.filter((v) => v.pluginId === pluginId), [allVersions, pluginId]);
   const loadVersions = usePluginStore((s) => s.loadVersions);
@@ -52,8 +53,9 @@ const VersionManager: React.FC<VersionManagerProps> = ({ pluginId }) => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [form] = Form.useForm();
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<Record<string, File>>({});
   const [uploading, setUploading] = useState(false);
+  const safePlatforms: Platform[] = Array.isArray(platforms) && platforms.length > 0 ? platforms : ['iOS', 'Android'];
 
   useEffect(() => {
     loadVersions(pluginId);
@@ -66,23 +68,36 @@ const VersionManager: React.FC<VersionManagerProps> = ({ pluginId }) => {
     } catch {
       return;
     }
-    if (!uploadFile) {
-      message.error('请上传插件包');
+
+    // 检查所有平台是否都上传了文件
+    const missingPlatforms = safePlatforms.filter((p) => !uploadFiles[p]);
+    if (missingPlatforms.length > 0) {
+      message.error(`请为以下平台上传文件: ${missingPlatforms.map(p => PLATFORM_LABELS[p]).join(', ')}`);
       return;
     }
+
     try {
       setUploading(true);
       const formData = new FormData();
       formData.append('version', values.version);
       formData.append('releaseNotes', values.releaseNotes || '');
-      formData.append('file', uploadFile);
+      
+      // 添加所有文件和对应的平台信息
+      const platformsList: string[] = [];
+      Object.entries(uploadFiles).forEach(([platform, file]) => {
+        formData.append('files', file);
+        platformsList.push(platform);
+      });
+      
+      formData.append('platforms', JSON.stringify(platformsList));
+
       await addVersion(pluginId, formData);
       message.success('版本创建成功');
       setModalOpen(false);
       form.resetFields();
-      setUploadFile(null);
-    } catch {
-      message.error('创建失败');
+      setUploadFiles({});
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '创建失败');
     } finally {
       setUploading(false);
     }
@@ -102,13 +117,25 @@ const VersionManager: React.FC<VersionManagerProps> = ({ pluginId }) => {
 
   const columns = [
     { title: '版本号', dataIndex: 'version', key: 'version', width: 120 },
-    { title: '文件名', dataIndex: 'fileName', key: 'fileName', width: 220 },
     {
-      title: '文件大小',
-      dataIndex: 'fileSize',
-      key: 'fileSize',
-      width: 120,
-      render: (size: number) => formatFileSize(size),
+      title: '平台文件',
+      key: 'files',
+      width: 300,
+      render: (_: unknown, record: PluginVersion) => {
+        const safeFiles = Array.isArray(record.files) ? record.files : [];
+        return (
+        <div>
+          {safeFiles.map((file) => (
+            <div key={file.platform} style={{ marginBottom: 8 }}>
+              <Tag color="blue">{PLATFORM_LABELS[file.platform as keyof typeof PLATFORM_LABELS]}</Tag>
+              <span style={{ marginLeft: 8, fontSize: 12 }}>{file.fileName}</span>
+              <span style={{ marginLeft: 8, color: '#999', fontSize: 12 }}>({formatFileSize(file.fileSize)})</span>
+            </div>
+          ))}
+          {safeFiles.length === 0 && <span style={{ color: '#999' }}>暂无文件信息</span>}
+        </div>
+      );
+      },
     },
     {
       title: '状态',
@@ -191,12 +218,18 @@ const VersionManager: React.FC<VersionManagerProps> = ({ pluginId }) => {
         onCancel={() => {
           setModalOpen(false);
           form.resetFields();
-          setUploadFile(null);
+          setUploadFiles({});
           setUploading(false);
         }}
         confirmLoading={uploading}
         destroyOnHidden
+        width={700}
       >
+        <Alert
+          message={`请为以下平台上传插件包: ${safePlatforms.map(p => PLATFORM_LABELS[p]).join(', ')}`}
+          type="info"
+          style={{ marginBottom: 16 }}
+        />
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
             name="version"
@@ -209,22 +242,38 @@ const VersionManager: React.FC<VersionManagerProps> = ({ pluginId }) => {
             <Input placeholder="如：1.2.0" />
           </Form.Item>
           <Form.Item name="releaseNotes" label="发布说明">
-            <Input.TextArea placeholder="描述此版本的更新内容" rows={4} />
+            <Input.TextArea placeholder="描述此版本的更新内容" rows={3} />
           </Form.Item>
-          <Form.Item label="上传 RN 插件包" required>
-            <Upload
-              beforeUpload={(file) => {
-                setUploadFile(file);
-                return false;
-              }}
-              onRemove={() => setUploadFile(null)}
-              maxCount={1}
-              fileList={uploadFile ? [{ uid: '-1', name: uploadFile.name, status: 'done' }] : []}
-              accept=".zip,.tar.gz,.tgz,.bundle"
-            >
-              <Button icon={<UploadOutlined />}>选择文件</Button>
-            </Upload>
-          </Form.Item>
+
+          {safePlatforms.map((platform) => (
+            <div key={platform}>
+              <Divider style={{ margin: '12px 0' }} />
+              <Form.Item
+                label={`上传 ${PLATFORM_LABELS[platform]} 插件包`}
+                required
+                style={{ marginBottom: 0 }}
+              >
+                <Upload
+                  beforeUpload={(file) => {
+                    setUploadFiles((prev) => ({ ...prev, [platform]: file }));
+                    return false;
+                  }}
+                  onRemove={() => {
+                    setUploadFiles((prev) => {
+                      const updated = { ...prev };
+                      delete updated[platform];
+                      return updated;
+                    });
+                  }}
+                  maxCount={1}
+                  fileList={uploadFiles[platform] ? [{ uid: '-1', name: uploadFiles[platform].name, status: 'done' }] : []}
+                  accept=".zip,.tar.gz,.tgz,.bundle,.ipa,.apk,.hap"
+                >
+                  <Button icon={<UploadOutlined />}>选择文件</Button>
+                </Upload>
+              </Form.Item>
+            </div>
+          ))}
         </Form>
       </Modal>
     </div>

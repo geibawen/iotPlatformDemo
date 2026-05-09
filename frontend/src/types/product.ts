@@ -12,8 +12,14 @@ export interface Product {
   category: ProductCategory;
   connectionType: ConnectionType;
   status: ProductStatus;
+  inheritedFromProductId?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CreateProductPayload extends Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'status'> {
+  status?: ProductStatus;
+  baseProductId?: string;
 }
 
 export interface ProductCategoryItem {
